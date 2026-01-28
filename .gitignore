@@ -1,0 +1,9 @@
+.vscode/
+~*.*
+
+*.cmd
+!edit-csveditor.cmd
+!open-csveditor.cmd
+
+*.csv
+!example.csv
