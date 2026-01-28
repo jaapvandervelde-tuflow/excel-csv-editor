@@ -6,7 +6,21 @@ The sheet can load and save data from an underlying `.csv`, and stores additiona
 
 Using a renamed `.cmd` file all the complexity can be hidden from the user, provided the location of the `.xlsm` is configured correctly in the `.cmd`.
 
-## Usage
+## Simple Use
+
+1. Clone the project into a subfolder in your project
+```
+git clone git@bmt-gitlab.bmt-wbm.local:jaap.vandervelde/excel-csv-editor.git
+```
+
+2. (Optional) turns your `.xlsx` into a `.csv`
+3. Copy `open-csveditor.cmd` next to your `.csv` file
+4. Ensure that `EDITOR_DIR` points to the correct location (see below)
+5. Rename the `.cmd` to `<your .csv name>.cmd` or `edit-<your .csv name>.cmd`
+
+You can now use the `.cmd` to edit the `.csv` with the editor.
+
+## Technical Usage
 
 Set environment variables, e.g.:
 ```none
