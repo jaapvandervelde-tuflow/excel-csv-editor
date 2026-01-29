@@ -50,6 +50,8 @@ set "DATA_DIR=%SCRIPT_DIR%..\csvs\"
 
 The script will autocreate a `metadata/` and `temp/` folder in the same location as the `.xlsm` by default. The `metadata/` folder is used to store generated `.json` sidecar configuration files that store values like column width, hidden columns, word wrapping, etc.
 
+The `./.temp/` folder is used for temporary copies of the `.xlsm`, as Excel will open the file with a lock, preventing editing of two `.csv` in parallel. By launching a copy instead, this is circumvented. This requires trusting any `.xlsm` in the `./.temp/` location, which is achieved by calling `Ensure-ExcelTrustedLocation.ps1`.
+
 ## Editing the source
 
 The `.xlsm` prevents saving and forces an export instead, by design. However, if changes need to be made to the sheet itself or the VBA code contained therein, you can launch it with [edit-csveditor.cmd](edit-csveditor.cmd) to set `CSV_EDITOR_DEV=1` which will allow saving directly.
