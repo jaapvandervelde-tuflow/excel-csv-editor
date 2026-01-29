@@ -54,4 +54,6 @@ The `./.temp/` folder is used for temporary copies of the `.xlsm`, as Excel will
 
 ## Editing the source
 
-The `.xlsm` prevents saving and forces an export instead, by design. However, if changes need to be made to the sheet itself or the VBA code contained therein, you can launch it with [edit-csveditor.cmd](edit-csveditor.cmd) to set `CSV_EDITOR_DEV=1` which will allow saving directly.
+The `.xlsm` prevents saving and forces an export instead, by design. However, if changes need to be made to the sheet itself or the VBA code contained therein, you can launch it with [scripts/edit-csveditor.cmd](scripts/edit-csveditor.cmd) to set `CSV_EDITOR_DEV=1` which will allow saving directly.
+
+Note: before committing any changes, be sure to run [scripts/Synchronise-VBA.ps1](scripts/Synchronise-VBA.ps1) to update the copy of the VBA source in [vba/](vba/). Do not edit these files, they are overwritten when syncing, VBA code should be edited directly in the [CsvEditor.xlsm](CsvEditor.xlsm).
