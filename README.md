@@ -1,6 +1,6 @@
 # Excel CSV editor
 
-The Excel sheet [[CsvEditor.xlsm]] serves as a `.csv` file editor.
+The Excel sheet [CsvEditor.xlsm](CsvEditor.xlsm) serves as a `.csv` file editor.
 
 The sheet can load and save data from an underlying `.csv`, and stores additional data like column sizes, splits, and table style in a `.json` sidecar configuration (in the `meta` folder in the same location as the `.xlsm`).
 
@@ -29,9 +29,9 @@ Set environment variables, e.g.:
 set "EXCEL_CSV_PATH=test.csv"
 set "EXCEL_CSV_CWD=C:\working\dir"
 ```
-Then open [[CsvEditor.xlsm]] and it will pick up the file and allow the user to edit it.
+Then open [CsvEditor.xlsm](CsvEditor.xlsm) and it will pick up the file and allow the user to edit it.
 
-It is recommended to use a script like [[open-csveditor.cmd]] which automates all this. In fact, if you create a copy of `open-csveditor.cmd` and name it `<name of your file>.csv.cmd` (e.g. `example.csv.cmd`) or `edit-<name of your file>.csv.cmd` (e.g. `edit-example.csv.cmd`) then it will correctly infer the name of `example.csv` from the script name, and try to open that `.csv`. 
+It is recommended to use a script like [open-csveditor.cmd](open-csveditor.cmd) which automates all this. In fact, if you create a copy of `open-csveditor.cmd` and name it `<name of your file>.csv.cmd` (e.g. `example.csv.cmd`) or `edit-<name of your file>.csv.cmd` (e.g. `edit-example.csv.cmd`) then it will correctly infer the name of `example.csv` from the script name, and try to open that `.csv`. 
 
 Note: ensure that the location of the `.xlsm` file is correctly adjusted in the `.cmd` files you create by updating the line:
 ```
@@ -43,7 +43,7 @@ By default, it assumes the `.xlsm` is in the same location as the command script
 set "EDITOR_DIR=%SCRIPT_DIR%..\excel-csv-editor\"
 ```
 
-Similarly, the [[open-csveditor.cmd]] script assumes it is in the same folder as the `.csv` when you rename it. If you want to store `.csv` in a different location, update the `DATA_DIR` like:
+Similarly, the [open-csveditor.cmd](open-csveditor.cmd) script assumes it is in the same folder as the `.csv` when you rename it. If you want to store `.csv` in a different location, update the `DATA_DIR` like:
 ```
 set "DATA_DIR=%SCRIPT_DIR%..\csvs\"
 ```
