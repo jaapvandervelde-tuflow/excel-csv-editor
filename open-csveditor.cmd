@@ -101,9 +101,11 @@ rem ----------------------------
 rem Ensure Excel trusted location for temp folder (idempotent)
 rem ----------------------------
 
-set "TRUST_PS1=%EDITOR_DIR%Ensure-ExcelTrustedLocation.ps1"
+set "TRUST_PS1=%EDITOR_DIR%scripts\Ensure-ExcelTrustedLocation.ps1"
 if exist "%TRUST_PS1%" (
   powershell -NoProfile -ExecutionPolicy Bypass -File "%TRUST_PS1%" -TrustedPath "%EDITOR_TEMP_DIR%"
+) else (
+  echo Warning: Could not find trusted location script: "%TRUST_PS1%"
 )
 
 rem Cleanup old temp copies (silent on failures/locks)
