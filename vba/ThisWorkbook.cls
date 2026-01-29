@@ -22,7 +22,7 @@ End Property
 
 Private Sub Workbook_Open()
     On Error Resume Next
-    modCsvEditor.ReloadFromEnv
+    modCsvSession.ReloadFromEnv
     On Error GoTo 0
 
     ' After reload, treat workbook as clean
@@ -34,7 +34,7 @@ Private Sub Workbook_BeforeSave(ByVal SaveAsUI As Boolean, Cancel As Boolean)
         Cancel = True
 
         On Error GoTo exportFail
-        modCsvEditor.ExportToOriginalCsv
+        modCsvSession.ExportToOriginalCsv
 
         ' Mark clean after successful export
         Me.Saved = True
@@ -63,7 +63,7 @@ Private Sub Workbook_BeforeClose(Cancel As Boolean)
             Case vbYes
                 ' Close, save
                 On Error GoTo saveFail
-                modCsvEditor.ExportToOriginalCsv False
+                modCsvSession.ExportToOriginalCsv False
                 Me.Saved = True
 
             Case vbNo

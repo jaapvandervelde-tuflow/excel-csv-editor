@@ -4,7 +4,7 @@ Public Sub UpdateCsvPathLabel()
     Set ws = ThisWorkbook.Worksheets("Controls")
 
     Dim p As String
-    p = modCsvEditor.CurrentCsvPathAbs()
+    p = modCsvSession.CurrentCsvPathAbs()
 
     Dim txt As String
     If Len(p) = 0 Then
