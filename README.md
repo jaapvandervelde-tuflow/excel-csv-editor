@@ -13,12 +13,14 @@ Using a renamed `.cmd` file all the complexity can be hidden from the user, prov
 git clone git@bmt-gitlab.bmt-wbm.local:jaap.vandervelde/excel-csv-editor.git
 ```
 
-2. (Optional) turns your `.xlsx` into a `.csv`
+2. (Optional) turn your `.xlsx` into a `.csv`
 3. Copy `open-csveditor.cmd` next to your `.csv` file
-4. Ensure that `EDITOR_DIR` points to the correct location (see below)
+4. Ensure that `EDITOR_DIR` points to the where CsvEditor.xlsm is (see below)
 5. Rename the `.cmd` to `<your .csv name>.cmd` or `edit-<your .csv name>.cmd`
 
-You can now use the `.cmd` to edit the `.csv` with the editor.
+You can now use the `.cmd` to edit the `.csv` with the editor. The editor will remember basic settings like column width, hidden columns, word wrapping, etc. and store the raw data in the `.csv`. If you hit 'Save' from Excel, it will automatically use the export function instaed.
+
+If you want to store your `.csv` files separate from the `.cmd` files, you can update `DATA_DIR` to point to the correct folder with the matching `.csv` file(s). 
 
 ## Technical Usage
 
@@ -40,3 +42,10 @@ By default, it assumes the `.xlsm` is in the same location as the command script
 ```
 set "EDITOR_DIR=%SCRIPT_DIR%..\excel-csv-editor\"
 ```
+
+Similarly, the [[open-csveditor.cmd]] script assumes it is in the same folder as the `.csv` when you rename it. If you want to store `.csv` in a different location, update the `DATA_DIR` like:
+```
+set "DATA_DIR=%SCRIPT_DIR%..\csvs\"
+```
+
+The script will autocreate a `metadata/` and `temp/` folder in the same location as the `.xlsm` by default. The `metadata/` folder is used to store generated `.json` sidecar configuration files that store values like column width, hidden columns, word wrapping, etc.

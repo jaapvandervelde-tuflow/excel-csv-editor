@@ -1,4 +1,7 @@
 .vscode/
+.temp/
+.metadata/
+test/
 ~*.*
 
 *.cmd
