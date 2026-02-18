@@ -1,34 +1,34 @@
 @echo off
-setlocal EnableExtensions
+setlocal EnableExtensions EnableDelayedExpansion
 
-rem ============================
-rem Locations (customise these)
-rem ============================
+rem ==================================================================
+rem Locations (customise these in copies of this script)
+rem ==================================================================
 
-rem Directory of this .cmd
+rem Directory of this .cmd, no need to customise
 set "SCRIPT_DIR=%~dp0"
 
-rem Directory where CsvEditor.xlsm lives (relative to this script)
+rem Directory where CsvEditor.xlsm lives
 rem Default: same as SCRIPT_DIR
-rem Example:
-rem set "EDITOR_DIR=%SCRIPT_DIR%..\scripts\"
+rem Examples of custom value:
+rem   set "EDITOR_DIR=%SCRIPT_DIR%..\scripts\"
+rem   set "EDITOR_DIR=C:\Scripts\CsvEditor\"
 set "EDITOR_DIR=%SCRIPT_DIR%"
 
-rem Directory where CSV files live (relative to this script)
+rem Directory where CSV files live
 rem Default: same as SCRIPT_DIR
-rem Example:
-rem set "DATA_DIR=%SCRIPT_DIR%..\csvs\"
+rem Examples of custom value:
+rem   set "DATA_DIR=%SCRIPT_DIR%..\csvs\"
+rem   set "DATA_DIR=C:\Data\CsvFiles\"
 set "DATA_DIR=%SCRIPT_DIR%"
 
 rem Temp folder next to the editor workbook (created if missing)
+rem Default: .temp\ folder inside EDITOR_DIR
 set "EDITOR_TEMP_DIR=%EDITOR_DIR%.temp\\"
 
-rem Metadata folder next to the editor workbook (created if missing)
-set "EDITOR_METADATA_DIR=%EDITOR_DIR%.metadata\\"
-
-rem ============================
+rem ==================================================================
 rem Determine CSV path argument
-rem ============================
+rem ==================================================================
 
 set "ARG=%~1"
 set "BASE=%~n0"
@@ -60,6 +60,13 @@ if not defined CSVARG (
 )
 
 :resolve_csv
+rem Iterating over single value for access to modifiers like ~nxF
+for %%F in ("%CSVARG%") do set "CSVBASE=%%~nxF"
+rem Make a filename-safe prefix (replace characters illegal in Windows filenames)
+set "CSVSAFE=%CSVBASE%"
+set "CSVSAFE=!CSVSAFE: =_!"
+
+
 rem If CSVARG is not absolute/UNC, treat it as relative to DATA_DIR
 call :is_abs "%CSVARG%"
 if errorlevel 1 (
@@ -94,9 +101,6 @@ if not exist "%WB_SRC%" (
 rem Ensure temp directory exists
 if not exist "%EDITOR_TEMP_DIR%" mkdir "%EDITOR_TEMP_DIR%" >nul 2>&1
 
-rem Ensure metadata directory exists
-if not exist "%EDITOR_METADATA_DIR%" mkdir "%EDITOR_METADATA_DIR%" >nul 2>&1
-
 rem ----------------------------
 rem Ensure Excel trusted location for temp folder (idempotent)
 rem ----------------------------
@@ -115,7 +119,8 @@ rem Create a unique per-session copy name
 set "STAMP=%RANDOM%_%RANDOM%_%TIME%"
 set "STAMP=%STAMP::=%"
 set "STAMP=%STAMP: =0%"
-set "WB_COPY=%EDITOR_TEMP_DIR%CsvEditor_%STAMP%.xlsm"
+rem Marker token: __CsvEditor__ so cleanup can target these reliably
+set "WB_COPY=%EDITOR_TEMP_DIR%!CSVSAFE!__CsvEditor__%STAMP%.xlsm"
 
 copy /y "%WB_SRC%" "%WB_COPY%" >nul
 if errorlevel 1 (
@@ -123,7 +128,13 @@ if errorlevel 1 (
   exit /b 2
 )
 
-start "" "%WB_COPY%"
+call :find_excel_exe
+if not defined EXCEL_EXE (
+  echo Could not locate EXCEL.EXE
+  exit /b 2
+)
+
+start "" "%EXCEL_EXE%" /x "%WB_COPY%"
 exit /b 0
 
 rem ============================
@@ -140,5 +151,20 @@ exit /b 1
 :cleanup_temp
 set "TD=%~1"
 rem Delete any prior copies; ignore errors (locked/open files)
+del /q "%TD%*__CsvEditor__*.xlsm" >nul 2>&1
+rem Also remove legacy naming pattern used previously
 del /q "%TD%CsvEditor_*.xlsm" >nul 2>&1
+exit /b 0
+
+
+:find_excel_exe
+set "EXCEL_EXE="
+for %%P in (
+  "%ProgramFiles%\Microsoft Office\root\Office16\EXCEL.EXE"
+  "%ProgramFiles(x86)%\Microsoft Office\root\Office16\EXCEL.EXE"
+  "%ProgramFiles%\Microsoft Office\Office16\EXCEL.EXE"
+  "%ProgramFiles(x86)%\Microsoft Office\Office16\EXCEL.EXE"
+) do (
+  if not defined EXCEL_EXE if exist %%~P set "EXCEL_EXE=%%~P"
+)
 exit /b 0
