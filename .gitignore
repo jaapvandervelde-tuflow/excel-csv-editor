@@ -4,6 +4,9 @@
 test/
 ~*.*
 
+.idea/
+*.py[ocd]
+
 *.cmd
 !edit-csveditor.cmd
 !open-csveditor.cmd

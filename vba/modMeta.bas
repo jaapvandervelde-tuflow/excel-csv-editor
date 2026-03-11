@@ -98,14 +98,37 @@ Public Sub ApplyMetaConfig(ByVal json As String, ByVal ws As Worksheet, ByVal ta
     fr = ExtractIntValue(json, "freeze_row", 2)
     fc = ExtractIntValue(json, "freeze_col", 1)
 
-    ' Word wrap
+    ' Word wrap (columns)
     Dim wraps As Variant
     wraps = ExtractBoolArray(json, "wrap_columns")
+    ' Also get the raw array text to detect "null" entries
+    Dim wrapRaw() As String
+    Dim wrapInner As String
+    wrapInner = Replace$(Replace$(Replace$(ExtractArrayInner(json, "wrap_columns"), vbCr, ""), vbLf, ""), " ", "")
+    If Len(wrapInner) > 0 Then
+        wrapRaw = Split(wrapInner, ",")
+    End If
+
     If Not IsEmpty(wraps) Then
         Dim k As Long
         For k = LBound(wraps) To UBound(wraps)
-            ws.Columns(k + 1).WrapText = CBool(wraps(k))
+            If k <= UBound(wrapRaw) Then
+                If wrapRaw(k) <> "null" Then
+                    ws.Columns(k + 1).WrapText = CBool(wraps(k))
+                End If
+                ' null = skip, let cell overrides handle it
+            End If
         Next k
+    End If
+
+    ' Word wrap (cell overrides)
+    Dim cellWraps As Object
+    Set cellWraps = ExtractStringDict(json, "wrap_cells")
+    If Not cellWraps Is Nothing Then
+        Dim addr As Variant
+        For Each addr In cellWraps.Keys
+            ws.Range(CStr(addr)).WrapText = (cellWraps(addr) = "true")
+        Next addr
     End If
 
     ws.Activate
@@ -173,7 +196,13 @@ Public Function BuildMetaJson(ByVal ws As Worksheet, ByVal tableName As String, 
     If nCols > 0 Then
         ReDim wrapParts(0 To nCols - 1)
         For i = 1 To nCols
-            If ws.Columns(i).WrapText Then
+            Dim cw As Variant
+            cw = ws.Columns(i).ColumnWidth
+            Dim colWrapState As Variant
+            colWrapState = ws.Columns(i).WrapText
+            If IsNull(colWrapState) Then
+                wrapParts(i - 1) = "null"   ' mixed - let cell overrides handle it
+            ElseIf CBool(colWrapState) Then
                 wrapParts(i - 1) = "true"
             Else
                 wrapParts(i - 1) = "false"
@@ -182,6 +211,41 @@ Public Function BuildMetaJson(ByVal ws As Worksheet, ByVal tableName As String, 
     Else
         ReDim wrapParts(0 To -1)
     End If
+
+    ' wrap_cells: only cells that differ from their column default
+    Dim cellWrapParts As String
+    cellWrapParts = "{"
+    Dim firstEntry As Boolean
+    firstEntry = True
+    
+    Dim cell As Range
+    Dim colWrap As Variant
+    Dim cellWrap As Variant
+    
+    For Each cell In ws.UsedRange
+        cellWrap = cell.WrapText
+        If Not IsNull(cellWrap) Then
+            Dim colDefault As String
+            colDefault = wrapParts(cell.Column - 1)  ' "true", "false", or "null"
+            Dim cellBool As Boolean
+            cellBool = CBool(cellWrap)
+            Dim differs As Boolean
+            If colDefault = "null" Then
+                differs = True   ' column is mixed, record all cells
+            ElseIf colDefault = "true" Then
+                differs = Not cellBool
+            Else
+                differs = cellBool
+            End If
+            If differs Then
+                If Not firstEntry Then cellWrapParts = cellWrapParts & ", "
+                cellWrapParts = cellWrapParts & """" & cell.Address(False, False) & """: " & _
+                                IIf(cellBool, "true", "false")
+                firstEntry = False
+            End If
+        End If
+    Next cell
+    cellWrapParts = cellWrapParts & "}"
 
     Dim json As String
     json = "{" & vbCrLf & _
@@ -193,7 +257,8 @@ Public Function BuildMetaJson(ByVal ws As Worksheet, ByVal tableName As String, 
            "  ""freeze_col"": " & CStr(freezeCol) & "," & vbCrLf & _
            "  ""column_widths"": [" & Join(wParts, ",") & "]," & vbCrLf & _
            "  ""hidden_columns"": [" & Join(hParts, ",") & "]," & vbCrLf & _
-           "  ""wrap_columns"": [" & Join(wrapParts, ",") & "]" & vbCrLf & _
+           "  ""wrap_columns"": [" & Join(wrapParts, ",") & "]," & vbCrLf & _
+           "  ""wrap_cells"": " & cellWrapParts & vbCrLf & _
            "}" & vbCrLf
 
     BuildMetaJson = json
@@ -414,3 +479,65 @@ fail:
 End Function
 
 
+Private Function ExtractStringDict(ByVal json As String, ByVal key As String) As Object
+    Dim p As Long
+    p = InStr(1, json, """" & key & """", vbTextCompare)
+    If p = 0 Then Set ExtractStringDict = Nothing: Exit Function
+
+    Dim lb As Long, rb As Long
+    lb = InStr(p, json, "{", vbBinaryCompare)
+    If lb = 0 Then Set ExtractStringDict = Nothing: Exit Function
+
+    ' Find matching closing brace
+    Dim depth As Long: depth = 1
+    Dim i As Long
+    For i = lb + 1 To Len(json)
+        Dim ch As String
+        ch = Mid$(json, i, 1)
+        If ch = "{" Then depth = depth + 1
+        If ch = "}" Then
+            depth = depth - 1
+            If depth = 0 Then rb = i: Exit For
+        End If
+    Next i
+    If rb = 0 Then Set ExtractStringDict = Nothing: Exit Function
+
+    Dim inner As String
+    inner = Mid$(json, lb + 1, rb - lb - 1)
+
+    Dim dict As Object
+    Set dict = CreateObject("Scripting.Dictionary")
+
+    ' Parse "KEY": VALUE pairs
+    Dim pos As Long: pos = 1
+    Do While pos <= Len(inner)
+        Dim ks As Long
+        ks = InStr(pos, inner, """", vbBinaryCompare)
+        If ks = 0 Then Exit Do
+        Dim ke As Long
+        ke = InStr(ks + 1, inner, """", vbBinaryCompare)
+        If ke = 0 Then Exit Do
+        Dim entryKey As String
+        entryKey = Mid$(inner, ks + 1, ke - ks - 1)
+
+        Dim col As Long
+        col = InStr(ke + 1, inner, ":", vbBinaryCompare)
+        If col = 0 Then Exit Do
+
+        ' Find next comma or end of inner
+        Dim ve As Long
+        ve = InStr(col + 1, inner, ",")
+        Dim valStr As String
+        If ve > 0 Then
+            valStr = Trim$(Mid$(inner, col + 1, ve - col - 1))
+            pos = ve + 1
+        Else
+            valStr = Trim$(Mid$(inner, col + 1))
+            Exit Do
+        End If
+
+        dict(entryKey) = LCase$(valStr)
+    Loop
+
+    Set ExtractStringDict = dict
+End Function
