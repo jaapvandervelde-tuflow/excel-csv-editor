@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 No unreleased changes.
 
+## [1.0.1] - 2026-03-11
+
+### Fixed
+
+- Correct tag link formatting in the change log.
+
 ## [1.0.0] - 2026-03-11
 
 ### Added
@@ -16,4 +22,5 @@ No unreleased changes.
 - Track word wrapping per cell instead of per column as needed.
 - Add a change log.
 
-[1.0.0]: https://github.com/jaapvandervelde-tuflow/excel-csv-editor.git/releases/tag/v1.0.0
+[1.0.1]: https://github.com/jaapvandervelde-tuflow/excel-csv-editor/releases/tag/v1.0.1
+[1.0.0]: https://github.com/jaapvandervelde-tuflow/excel-csv-editor/releases/tag/v1.0.0
